@@ -26,6 +26,9 @@ namespace DarkMultiPlayer
         public bool fireReset;
         public GameMode gameMode;
         public bool serverAllowCheats = true;
+        public bool scienceCheatPrevented = false;
+        public bool repCheatPrevented = false;
+        public bool fundsCheatPrevented = false;
         //Disconnect message
         public bool displayDisconnectMessage;
         private ScreenMessage disconnectMessage;
@@ -382,6 +385,24 @@ namespace DarkMultiPlayer
                         {
                             gravityEntry.Key.GeeASL = gravityEntry.Value;
                         }
+
+                        if (!scienceCheatPrevented)
+                        {
+                            GameEvents.OnScienceChanged.Add(singleton.PreventScienceCheats);
+                            scienceCheatPrevented = true;
+                        }
+
+                        if (!repCheatPrevented)
+                        {
+                            GameEvents.OnReputationChanged.Add(singleton.PreventRepCheats);
+                            repCheatPrevented = true;
+                        }
+
+                        if (!fundsCheatPrevented)
+                        {
+                            GameEvents.OnFundsChanged.Add(singleton.PreventFundsCheats);
+                            fundsCheatPrevented = true;
+                        }
                     }
 
                     if (HighLogic.LoadedScene == GameScenes.FLIGHT && FlightGlobals.ready)
@@ -549,6 +570,15 @@ namespace DarkMultiPlayer
             }
             HighLogic.CurrentGame = null;
             bodiesGees.Clear();
+
+            scienceCheatPrevented = false;
+            GameEvents.OnScienceChanged.Remove(singleton.PreventScienceCheats);
+
+            repCheatPrevented = false;
+            GameEvents.OnReputationChanged.Remove(singleton.PreventRepCheats);
+
+            fundsCheatPrevented = false;
+            GameEvents.OnFundsChanged.Remove(singleton.PreventFundsCheats);
         }
 
         public Game.Modes ConvertGameMode(GameMode inputMode)
@@ -647,6 +677,34 @@ namespace DarkMultiPlayer
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
+            }
+        }
+
+        private void PreventScienceCheats(float amount, TransactionReasons reason)
+        {
+            float oldScience = ResearchAndDevelopment.Instance.Science;
+            if (reason == TransactionReasons.Cheating)
+            {
+                DarkLog.Debug("Subtracting " + amount + " science, player is cheating!");
+                ResearchAndDevelopment.Instance.AddScience(amount * -1, TransactionReasons.None);
+            }
+        }
+
+        private void PreventRepCheats(float amount, TransactionReasons reason)
+        {
+            if (reason == TransactionReasons.Cheating)
+            {
+                DarkLog.Debug("Adding " + amount + " reputation, player is cheating!");
+                Reputation.Instance.AddReputation(amount * -1, TransactionReasons.None);
+            }
+        }
+
+        private void PreventFundsCheats(double amount, TransactionReasons reason)
+        {
+            if (reason == TransactionReasons.Cheating)
+            {
+                DarkLog.Debug("Adding " + amount + " funds, player is cheating!");
+                Funding.Instance.AddFunds(amount * -1, TransactionReasons.None);
             }
         }
     }
