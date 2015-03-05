@@ -443,6 +443,18 @@ namespace DarkMultiPlayer
                     throwLine = 26;
                     VesselUpdate vu = null;
                     throwLine = 27;
+                   if (vesselQueue.Value == null)
+                    {
+                        Debug.Log("LINE27THROW vesselQueue.Value is null!");
+                    }
+                    if (vesselQueue.Value.Count > 0)
+                    {
+                        if (vesselQueue.Value.Peek() == null)
+                        {
+                            Debug.Log("LINE27THROW vesselQueue.Value.Peek() is null!");
+                            continue;
+                        }
+                    }
                     //Get the latest position update
                     while (vesselQueue.Value.Count > 0 ? (vesselQueue.Value.Peek().planetTime < Planetarium.GetUniversalTime()) : false)
                     {
@@ -464,7 +476,7 @@ namespace DarkMultiPlayer
             }
             catch (Exception e)
             {
-                DarkLog.Debug("VESSEL UPDATE THROW: Threw on line " + throwLine);
+                DarkLog.Debug("VESSEL UPDATE THROW: Threw on line " + throwLine + ", exception: " + e);
             }
         }
 
